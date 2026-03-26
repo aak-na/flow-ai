@@ -211,6 +211,8 @@ function App() {
     showToast(`Added new ${type === 'inputNode' ? 'Input' : 'Result'} node`);
   };
 
+  const API_BASE = import.meta.env.VITE_API_URL || '';
+
   const runFlow = async () => {
     setLoading(true);
     // Find the first input node that has a connected result node
@@ -225,7 +227,7 @@ function App() {
       if (sourceNode && targetNode && sourceNode.data.prompt) {
         processedAny = true;
         try {
-          const res = await fetch('/api/ask-ai', {
+          const res = await fetch(`${API_BASE}/api/ask-ai`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ prompt: sourceNode.data.prompt })
@@ -263,7 +265,7 @@ function App() {
     }
 
     try {
-      const res = await fetch('/api/save', {
+      const res = await fetch(`${API_BASE}/api/save`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 

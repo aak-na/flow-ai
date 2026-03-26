@@ -76,3 +76,16 @@ cd flow-ai
 - **Backend:** Node.js, Express, Mongoose
 - **AI:** OpenRouter API
 - **Database:** MongoDB
+
+## Deployment on Render
+
+If you are deploying the frontend and backend as separate services on Render:
+
+1. **Backend Service:**
+   - Set environment variables: `MONGO_URI`, `OPENROUTER_API_KEY`.
+   - The `PORT` is handled automatically.
+
+2. **Frontend (Static Site/Web Service):**
+   - Set an environment variable: `VITE_API_URL`.
+   - Set its value to your backend's Render URL (e.g., `https://flow-ai-backend.onrender.com`).
+   - This tells the frontend where to find the API.
