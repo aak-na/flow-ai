@@ -256,10 +256,11 @@ function App() {
   };
 
   const saveFlow = async () => {
-    const promptNode = nodes.find(n => n.id === '1');
-    const resultNode = nodes.find(n => n.id === '2');
+    // Dynamically find nodes with data to save
+    const promptNode = nodes.find(n => n.type === 'inputNode' && n.data.prompt);
+    const resultNode = nodes.find(n => n.type === 'resultNode' && n.data.response);
     
-    if (!promptNode.data.prompt || !resultNode.data.response) {
+    if (!promptNode || !resultNode) {
       showToast('Please run the flow and get a response before saving.', 'error');
       return;
     }
