@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>React Flow AI</title>
+  <link rel="stylesheet" href="https://unpkg.com/reactflow@11.11.4/dist/style.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="module">
+    import React, { useState, useCallback } from 'https://esm.sh/react@18';
+    import { createRoot } from 'https://esm.sh/react-dom@18/client';
+    import ReactFlow, { addEdge, Background, Controls, Handle, Position } from 'https://esm.sh/reactflow@11?deps=react@18,react-dom@18';
+    import htm from 'https://esm.sh/htm';
+    
+    const html = htm.bind(React.createElement);
+
+    // Custom Input Node
+    function InputNode({ data }) {
+      return html`
+        <div class="custom-node input-node">
+          <label>Prompt</label>
+          <textarea 
+            placeholder="Type your prompt here..."
+            value=${data.prompt}
+            onChange=${data.onChange}
+          ></textarea>
+          <${Handle} type="source" position=${Position.Right} />
+        </div>
+      `;
+    }
+
+    // Custom Result Node
+    function ResultNode({ data }) {
+      return html`
+        <div class="custom-node result-node">
+          <${Handle} type="target" position=${Position.Left} />
+          <label>AI Response</label>
+          <div class="result-text">${data.response || 'Waiting for input...'}</div>
+        </div>
+      `;
+    }
+
+    const nodeTypes = {
+      inputNode: InputNode,
+      resultNode: ResultNode
+    };
+
+    const initialNodes = [
+      {
+        id: '1',
+        type: 'inputNode',
+        position: { x: 100, y: 150 },
+        data: { prompt: 'What is the capital of France?' }
+      },
+      {
+        id: '2',
+        type: 'resultNode',
+        position: { x: 500, y: 150 },
+        data: { response: '' }
+      }
+    ];
+
+    const initialEdges = [{ id: 'e1-2', source: '1', target: '2', animated: true }];
+
+    function App() {
+      const [nodes, setNodes] = useState(initialNodes);
+      const [edges, setEdges] = useState(initialEdges);
+      const [loading, setLoading] = useState(false);
+
+      // Handle input change
+      const handleInputChange = useCallback((evt) => {
+        setNodes((nds) =>
+          nds.map((node) => {
+            if (node.id === '1') {
+              node.data = {
+                ...node.data,
+                prompt: evt.target.value,
+                onChange: handleInputChange
+              };
+            }
+            return node;
+          })
+        );
+      }, []);
+
+      // Initialize the onChange handler for the input node
+      React.useEffect(() => {
+        setNodes((nds) =>
+          nds.map((node) => {
+            if (node.id === '1') {
+              node.data = { ...node.data, onChange: handleInputChange };
+            }
+            return node;
+          })
+        );
+      }, [handleInputChange]);
+
+      const onConnect = useCallback(
+        (params) => setEdges((eds) => addEdge(params, eds)),
+        []
+      );
+
+      const runFlow = async () => {
+        setLoading(true);
+        const promptNode = nodes.find(n => n.id === '1');
+        const promptText = promptNode.data.prompt;
+
+        try {
+          const res = await fetch('/api/ask-ai', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt: promptText })
+          });
+          const data = await res.json();
+          
+          setNodes((nds) =>
+            nds.map((node) => {
+              if (node.id === '2') {
+                node.data = { ...node.data, response: data.response || data.error };
+              }
+              return node;
+            })
+          );
+        } catch (error) {
+          console.error(error);
+          setNodes((nds) =>
+            nds.map((node) => {
+              if (node.id === '2') {
+                node.data = { ...node.data, response: 'Error connecting to API.' };
+              }
+              return node;
+            })
+          );
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      const saveFlow = async () => {
+        const promptNode = nodes.find(n => n.id === '1');
+        const resultNode = nodes.find(n => n.id === '2');
+        
+        try {
+          const res = await fetch('/api/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              prompt: promptNode.data.prompt,
+              response: resultNode.data.response
+            })
+          });
+          if(res.ok) {
+            alert('Saved successfully to MongoDB!');
+          }
+        } catch (error) {
+          alert('Error saving to DB');
+        }
+      };
+
+      return html`
+        <div class="app-container">
+          <header class="navbar">
+            <h1 class="logo">AI Flow Builder</h1>
+            <div class="actions">
+              <button class="btn btn-primary" onClick=${runFlow} disabled=${loading}>
+                ${loading ? 'Thinking...' : 'Run Flow'}
+              </button>
+              <button class="btn btn-secondary" onClick=${saveFlow}>Save</button>
+            </div>
+          </header>
+          <div class="flow-wrapper">
+            <${ReactFlow}
+              nodes=${nodes}
+              edges=${edges}
+              nodeTypes=${nodeTypes}
+              onConnect=${onConnect}
+              fitView
+              attributionPosition="bottom-right"
+            >
+              <${Background} color="#aaa" gap=${16} />
+              <${Controls} />
+            </${ReactFlow}>
+          </div>
+        </div>
+      `;
+    }
+
+    const root = createRoot(document.getElementById('root'));
+    root.render(html`<${App} />`);
+  </script>
+</body>
+</html>
