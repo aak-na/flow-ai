@@ -211,7 +211,7 @@ function App() {
     showToast(`Added new ${type === 'inputNode' ? 'Input' : 'Result'} node`);
   };
 
-  const API_BASE = import.meta.env.VITE_API_URL || '';
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
   const runFlow = async () => {
     setLoading(true);
@@ -227,7 +227,7 @@ function App() {
       if (sourceNode && targetNode && sourceNode.data.prompt) {
         processedAny = true;
         try {
-          const res = await fetch(`${API_BASE}/api/ask-ai`, {
+          const res = await fetch(`${BACKEND_URL}/api/ask-ai`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ prompt: sourceNode.data.prompt })
@@ -265,7 +265,7 @@ function App() {
     }
 
     try {
-      const res = await fetch(`${API_BASE}/api/save`, {
+      const res = await fetch(`${BACKEND_URL}/api/save`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
