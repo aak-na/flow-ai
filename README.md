@@ -77,16 +77,36 @@ cd flow-ai
 - **AI:** OpenRouter API
 - **Database:** MongoDB
 
-## Deployment on Render
+## Deployment Guide (Render)
 
-If you are deploying the frontend and backend as separate services on Render:
+Since this project has a **Backend** and a **Frontend**, you will need to create **two separate services** on Render.
 
-1. **Backend Service:**
-   - Set environment variables: `MONGO_URI`, `OPENROUTER_API_KEY`.
-   - **New:** Set `FRONTEND_URL` to your frontend's Render URL (e.g., `https://flow-ai-web.onrender.com`).
-   - The `PORT` is handled automatically.
+### Step 1: Deploy the Backend (Web Service)
+1. **Log in** to [Render](https://dashboard.render.com/).
+2. Click **New +** and select **Web Service**.
+3. Connect your **flow-ai** GitHub repository.
+4. **Settings:**
+   - **Name:** `flow-ai-backend`
+   - **Root Directory:** `backend`
+   - **Build Command:** `npm install`
+   - **Start Command:** `node server.js`
+5. **Environment Variables:**
+   - `MONGO_URI`: (Your MongoDB connection string)
+   - `OPENROUTER_API_KEY`: (Your OpenRouter key)
+   - `FRONTEND_URL`: (Wait until Step 2 is done, then put your Frontend URL here)
 
-2. **Frontend (Static Site/Web Service):**
-   - Set an environment variable: `VITE_BACKEND_URL`.
-   - Set its value to your backend's Render URL (e.g., `https://flow-ai-backend.onrender.com`).
-   - This tells the frontend where to find the API.
+### Step 2: Deploy the Frontend (Static Site)
+1. In Render, click **New +** and select **Static Site**.
+2. Connect the same GitHub repository.
+3. **Settings:**
+   - **Name:** `flow-ai-frontend`
+   - **Root Directory:** `client`
+   - **Build Command:** `npm run build`
+   - **Publish Directory:** `dist`
+4. **Environment Variables:**
+   - **Key:** `VITE_BACKEND_URL`
+   - **Value:** (The URL of your Backend from Step 1)
+
+### Step 3: Final Connection
+Once your Frontend is deployed, grab its URL (e.g., `https://flow-ai-frontend.onrender.com`) and add it to your **Backend Service** environment variables as `FRONTEND_URL`. 
+*This tells the backend it's safe to accept data from your new website!*
